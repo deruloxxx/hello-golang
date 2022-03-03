@@ -1,9 +1,11 @@
 package main
 
 import (
+	trace "chat/main/trace"
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"text/template"
@@ -12,22 +14,23 @@ import (
 type templateHandler struct {
 	once     sync.Once
 	filename string
-	temp1    *template.Template
+	templ    *template.Template
 }
 
 // ServeHTTPはHTTPリクエストを処理します
 func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.once.Do(func() {
-		t.temp1 =
+		t.templ =
 			template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
-	t.temp1.Execute(w, r)
+	t.templ.Execute(w, r)
 }
 
 func main() {
 	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
 	flag.Parse()
 	r := newRoom()
+	r.tracer = trace.New(os.Stdout)
 	http.Handle("/", &templateHandler{filename: "chat.html"})
 	http.Handle("/room", r)
 	// チャットルームを開始
