@@ -1,6 +1,6 @@
 package main
 
-import "chat/main/chat/trace"
+import trace "chat/main/trace"
 
 type room struct {
 	// forwardは他のクライアントに転送するためのメッセージを保持するチャンネルです。
