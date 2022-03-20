@@ -1,7 +1,7 @@
 package main
 
 import (
-	trace "chat/main/trace"
+	"chat/main/trace"
 	"flag"
 	"log"
 	"net/http"
