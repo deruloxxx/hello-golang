@@ -9,6 +9,13 @@ import (
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/joho/godotenv"
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/facebook"
+	"github.com/stretchr/gomniauth/providers/github"
+	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/signature"
 )
 
 type templateHandler struct {
@@ -27,8 +34,17 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	godotenv.Load(".env")
+	var clientId = os.Getenv("CLIENT_ID")
+	var secretId = os.Getenv("SECRET_ID")
 	var addr = flag.String("host", ":8080", "アプリケーションのアドレス")
 	flag.Parse()
+	gomniauth.SetSecurityKey(signature.RandomKey(64))
+	gomniauth.WithProviders(
+		facebook.New(clientId, secretId, "http://localhost:8080/auth/facebook/callback"),
+		github.New(clientId, secretId, "http://localhost:8080/auth/github/callback"),
+		google.New(clientId, secretId, "http://localhost:8080/auth/google/callback"),
+	)
 	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
