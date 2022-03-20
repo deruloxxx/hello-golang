@@ -1,7 +1,7 @@
 package main
 
 import (
-	trace "chat/main/trace"
+	"hello-golang/trace"
 	"log"
 	"net/http"
 
