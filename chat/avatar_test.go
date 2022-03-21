@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestAuthAvatar(t *testing.T) {
 	var authAvatar AuthAvatar
@@ -19,5 +21,18 @@ func TestAuthAvatar(t *testing.T) {
 		if url != testUrl {
 			t.Error("AuthAvatar.GetAvatarURLは正しいURLを返すべきです")
 		}
+	}
+}
+
+func TestGravatarAvatar(t *testing.T) {
+	var gravatarAvatar GravatarAvatar
+	client := new(client)
+	client.userData = map[string]interface{}{"email": "myaddress@exmaple.com"}
+	url, err := gravatarAvatar.GetAvatarURL(client)
+	if err != nil {
+		t.Error("GravatarAvatar.GetAvatarURLはエラーを返すべきではありません")
+	}
+	if url != "//www.gravatar.com/avatar/abc" {
+		t.Error("GravatarAvatar.GetAvatarURLが%sという誤った値を返しました", url)
 	}
 }
