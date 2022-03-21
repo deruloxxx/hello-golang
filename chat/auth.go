@@ -23,7 +23,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// 何らかの別のエラーが発生
 		panic(err.Error())
 	} else {
-		// 成功。ラップされたハンドラを呼び出します。
+		// 成功。ラップされたハンドラを呼び出します
 		h.next.ServeHTTP(w, r)
 	}
 }
@@ -55,27 +55,28 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln("認証プロバイダーの取得に失敗しました", provider, "-", err)
 		}
 
-		credes, err := provider.CompleteAuth(objx.MustFromURLQuery(r.URL.RawQuery))
+		creds, err :=
+			provider.CompleteAuth(objx.MustFromURLQuery(r.URL.RawQuery))
 		if err != nil {
 			log.Fatalln("認証を完了できませんでした", provider, "-", err)
 		}
 
-		user, err := provider.GetUser(credes)
+		user, err := provider.GetUser(creds)
 		if err != nil {
-			log.Fatalln("ユーザーの取得に失敗しました", provider, "-", err)
+			log.Fatalln("ユーザーの取得に失敗しました", provider, "- ", err)
 		}
+
 		authCookieValue := objx.New(map[string]interface{}{
 			"name": user.Name(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",
 			Value: authCookieValue,
-			Path:  "/",
-		})
+			Path:  "/"})
 		w.Header()["Location"] = []string{"/chat"}
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	default:
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "アクション%sには非対応です。", action)
+		fmt.Fprintf(w, "アクション%sには非対応です", action)
 	}
 }
