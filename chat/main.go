@@ -11,7 +11,6 @@ import (
 
 	"hello-golang/trace"
 
-	"github.com/joho/godotenv"
 	"github.com/stretchr/gomniauth"
 	"github.com/stretchr/gomniauth/providers/facebook"
 	"github.com/stretchr/gomniauth/providers/github"
@@ -44,7 +43,6 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	godotenv.Load(".env")
 	var addr = flag.String("host", ":8080", "アプリケーションのアドレス")
 	flag.Parse()
 	gomniauth.SetSecurityKey(signature.RandomKey(64))
