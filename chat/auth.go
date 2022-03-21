@@ -33,10 +33,11 @@ func MustAuth(handler http.Handler) http.Handler {
 
 // loginHandlerはサードパーティーへのログインの処理を受け持ちます。
 // パスの形式: /auth/{action}/{provider}
+// http://localhost:8080/auth/google/callback
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	segs := strings.Split(r.URL.Path, "/")
-	action := segs[2]
-	provider := segs[3]
+	action := segs[3]
+	provider := segs[2]
 	switch action {
 	case "login":
 		provider, err := gomniauth.Provider(provider)
@@ -67,7 +68,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		authCookieValue := objx.New(map[string]interface{}{
-			"name": user.Name(),
+			"name":       user.Name(),
+			"avatar_url": user.AvatarURL(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",
