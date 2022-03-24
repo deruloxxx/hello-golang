@@ -1,4 +1,5 @@
 /chat/chat
 /chat/sprinkle/sprinkle
 /chat/domainify/domainify
+/chat/coolify/coolify
 .env
