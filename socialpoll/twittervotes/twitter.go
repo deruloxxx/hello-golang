@@ -49,16 +49,23 @@ var (
 
 func setupTwitterAuth() {
 	var ts struct {
-		ConsumerKey    string `env:SP_TWITTER_KEY, required`
-		ConsumerSecret string `env:SP_TWITTER_SECRET, required`
-		AccessToken    string `env:SP_TWITTER_ACCESSTOKEN, required`
+		ConsumerKey    string `env:"SP_TWITTER_KEY,required"`
+		ConsumerSecret string `env:"SP_TWITTER_SECRET,required"`
+		AccessToken    string `env:"SP_TWITTER_ACCESSTOKEN,required"`
+		AccessSecret   string `env:"SP_TWITTER_ACCESSSECRET,required"`
 	}
 	if err := envdecode.Decode(&ts); err != nil {
 		log.Fatalln(err)
 	}
 	creds = &oauth.Credentials{
-		Token:  ts.ConsumerKey,
-		Secret: ts.ConsumerSecret,
+		Token:  ts.AccessToken,
+		Secret: ts.AccessSecret,
+	}
+	authClient = &oauth.Client{
+		Credentials: oauth.Credentials{
+			Token:  ts.ConsumerKey,
+			Secret: ts.ConsumerSecret,
+		},
 	}
 }
 
@@ -77,9 +84,10 @@ func makeRequest(req *http.Request, params url.Values) (*http.Response, error) {
 		}
 	})
 	formEnc := params.Encode()
-	req.Header.Set("Content-Type", "applicaction/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Content-Length", strconv.Itoa(len(formEnc)))
-	req.Header.Set("Authorization", authClient.AuthorizationHeader(creds, "POST", req.URL, params))
+	req.Header.Set("Authorization",
+		authClient.AuthorizationHeader(creds, "POST", req.URL, params))
 	return httpClient.Do(req)
 }
 
@@ -110,7 +118,7 @@ func readFromTwitter(votes chan<- string) {
 		log.Println("検索のリクエストに失敗しました:", err)
 		return
 	}
-	reader = resp.Body
+	reader := resp.Body
 	decoder := json.NewDecoder(reader)
 	for {
 		var tweet tweet
@@ -118,7 +126,10 @@ func readFromTwitter(votes chan<- string) {
 			break
 		}
 		for _, option := range options {
-			if strings.Contains(strings.ToLower(tweet.Text), strings.ToLower(option)) {
+			if strings.Contains(
+				strings.ToLower(tweet.Text),
+				strings.ToLower(option),
+			) {
 				log.Println("投票:", option)
 				votes <- option
 			}
@@ -140,7 +151,7 @@ func startTwitterStream(stopchan <-chan struct{}, votes chan<- string) <-chan st
 			default:
 				log.Println("Twitterに問い合わせます...")
 				readFromTwitter(votes)
-				log.Println("(待機中)")
+				log.Println(" (待機中)")
 				time.Sleep(10 * time.Second) // 待機してから再接続します
 			}
 		}
