@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	apiKey := "4e37c69bdc6d1fcb868d0b6f1bfc6e45"
+	apiKey := ""
 	thesaurus := &thesaurus.BigHuge{APIKey: apiKey}
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
