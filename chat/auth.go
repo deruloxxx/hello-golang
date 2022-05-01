@@ -1,16 +1,14 @@
 package main
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
+	"github.com/markbates/goth/gothic"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/stretchr/gomniauth"
 	gomniauthcommon "github.com/stretchr/gomniauth/common"
-	"github.com/stretchr/objx"
 )
 
 type ChatUser interface {
@@ -55,51 +53,24 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	provider := segs[2]
 	switch action {
 	case "login":
-		provider, err := gomniauth.Provider(provider)
-		if err != nil {
-			log.Fatalln("認証プロバイダーの取得に失敗しました:", provider, "-", err)
+		if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
+			t, _ := template.New("foo").Parse(userTemplate)
+			if err := t.Execute(w, gothUser); err != nil {
+				log.Fatalln("template error:", err)
+			}
+		} else {
+			gothic.BeginAuthHandler(w, r)
 		}
-		loginUrl, err := provider.GetBeginAuthURL(nil, nil)
-		if err != nil {
-			log.Fatalln("GetBeginAuthURLの呼び出し中にエラーが発生しました:", provider, "-", err)
-		}
-		w.Header().Set("Location", loginUrl)
-		w.WriteHeader(http.StatusTemporaryRedirect)
 	case "callback":
-		provider, err := gomniauth.Provider(provider)
+		user, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
-			log.Fatalln("認証プロバイダーの取得に失敗しました", provider, "-", err)
+			log.Fatalln(err)
+			fmt.Fprintln(w, err)
+			return
 		}
+		t, _ := template.New("foo").Parse(userTemplate)
+		t.Execute(w, user)
 
-		creds, err :=
-			provider.CompleteAuth(objx.MustFromURLQuery(r.URL.RawQuery))
-		if err != nil {
-			log.Fatalln("認証を完了できませんでした", provider, "-", err)
-		}
-
-		user, err := provider.GetUser(creds)
-		if err != nil {
-			log.Fatalln("ユーザーの取得に失敗しました", provider, "- ", err)
-		}
-
-		chatUser := &chatUser{User: user}
-		m := md5.New()
-		io.WriteString(m, strings.ToLower(user.Name()))
-		chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
-		avatarURL, err := avatars.GetAvatarURL(chatUser)
-		if err != nil {
-			log.Fatalln("GetAvatarURLに失敗しました", "-", err)
-		}
-		// データを保存します
-		authCookieValue := objx.New(map[string]interface{}{
-			"userid":     chatUser.uniqueID,
-			"name":       user.Name(),
-			"avatar_url": avatarURL,
-		}).MustBase64()
-		http.SetCookie(w, &http.Cookie{
-			Name:  "auth",
-			Value: authCookieValue,
-			Path:  "/"})
 		w.Header()["Location"] = []string{"/chat"}
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	default:
@@ -107,3 +78,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "アクション%sには非対応です", action)
 	}
 }
+
+var userTemplate = `
+<p><a href="/logout/{{.Provider}}">logout</a></p>
+<p>Name: {{.Name}} [{{.LastName}}, {{.FirstName}}]</p>
+<p>Email: {{.Email}}</p>
+<p>NickName: {{.NickName}}</p>
+<p>Location: {{.Location}}</p>
+<p>AvatarURL: {{.AvatarURL}} <img src="{{.AvatarURL}}"></p>
+<p>Description: {{.Description}}</p>
+<p>UserID: {{.UserID}}</p>
+<p>AccessToken: {{.AccessToken}}</p>
+<p>ExpiwAt: {{.ExpiwAt}}</p>
+<p>RefwhToken: {{.RefwhToken}}</p>
+`
