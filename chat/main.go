@@ -11,12 +11,9 @@ import (
 
 	"hello-golang/trace"
 
-	"github.com/stretchr/gomniauth"
-	"github.com/stretchr/gomniauth/providers/facebook"
-	"github.com/stretchr/gomniauth/providers/github"
-	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/google"
 	"github.com/stretchr/objx"
-	"github.com/stretchr/signature"
 )
 
 // 現在アクティブなAvatarの実装
@@ -51,12 +48,9 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var addr = flag.String("host", ":8080", "アプリケーションのアドレス")
 	flag.Parse() // フラグを解釈します
-	// Gomniauthのセットアップ
-	gomniauth.SetSecurityKey(signature.RandomKey(64))
-	gomniauth.WithProviders(
-		github.New("3d1e6ba69036e0624b61", "7e8938928d802e7582908a5eadaaaf22d64babf1", "http://localhost:8080/auth/github/callback"),
-		google.New("1051709296778.apps.googleusercontent.com", "7oZxBGwpCI3UgFMgCq80Kx94", "http://localhost:8080/auth/google/callback"),
-		facebook.New("537611606322077", "f9f4d77b3d3f4f5775369f5c9f88f65e", "http://localhost:8080/auth/facebook/callback"),
+	// Gothのセットアップ
+	goth.UseProviders(
+		google.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), "http://localhost:8080/auth/google/callback"),
 	)
 
 	r := newRoom()
