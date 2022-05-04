@@ -34,7 +34,8 @@ func main() {
 	flag.Parse()
 	r := newRoom()
 	// ルート
-	http.Handle("/", &templateHandler{filename: "chat.html"})
+	// authHandlerのServeHttpメソッド実行→認証が成功していたら&templateHandlerのServeHttpメソッド実行
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/room", r)
 	// チャットルームを開始します
 	go r.run()
