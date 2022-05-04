@@ -36,6 +36,7 @@ func main() {
 	// ルート
 	// authHandlerのServeHttpメソッド実行→認証が成功していたら&templateHandlerのServeHttpメソッド実行
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
+	http.Handle("/login", &templateHandler{filename: "login.html"})
 	http.Handle("/room", r)
 	// チャットルームを開始します
 	go r.run()
