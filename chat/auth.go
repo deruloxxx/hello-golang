@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"strings"
+
+	"github.com/markbates/goth/gothic"
+	"github.com/stretchr/objx"
 )
 
 type authHandler struct {
@@ -31,17 +32,38 @@ func MustAuth(handler http.Handler) http.Handler {
 	return &authHandler{next: handler}
 }
 
-// loginHandlerはサードパーティーへのログイン処理を受け持ちます。
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	segs := strings.Split(r.URL.Path, "/")
-	action := segs[2]
-	provider := segs[3]
-	switch action {
-	case "login":
-		log.Println("TODO: ログイン処理", provider)
-	default:
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "アクション%sには非対応です", action)
+func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	// ④ 外部サービスからの認証結果を判定
+	user, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		fmt.Fprintln(w, err)
+		return
 	}
+
+	// ⑤ 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
+	authCookieValue := objx.New(map[string]interface{}{
+		"name":       user.Name,
+		"avatar_url": user.AvatarURL,
+	}).MustBase64()
+	http.SetCookie(w, &http.Cookie{
+		Name:  "auth",
+		Value: authCookieValue,
+		Path:  "/",
+	})
+
+	// メイン画面へリダイレクト
+	w.Header()["Location"] = []string{"/chat"}
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:   "auth",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	})
+
+	w.Header()["Location"] = []string{"/login"}
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
