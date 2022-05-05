@@ -13,8 +13,10 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/objx"
+	"github.com/stretchr/signature"
 
 	"github.com/gorilla/pat"
+	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -32,6 +34,7 @@ func init() {
 	if err != nil {
 		fmt.Printf("読み込み出来ませんでした: %v", err)
 	}
+	gothic.Store = sessions.NewCookieStore([]byte(signature.RandomKey(64)))
 	goth.UseProviders(
 		google.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), "http://localhost:3000/auth/google/callback"),
 	)
