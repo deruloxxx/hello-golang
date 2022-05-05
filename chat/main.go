@@ -54,7 +54,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		data["UserData"] = objx.MustFromBase64(authCookie.Value)
 	}
 	// http.Requestにあるポート番号を参照できるようにする
-	t.templ.Execute(w, r)
+	t.templ.Execute(w, data)
 }
 
 func main() {

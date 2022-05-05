@@ -33,16 +33,16 @@ func MustAuth(handler http.Handler) http.Handler {
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
-	// ④ 外部サービスからの認証結果を判定
+	// 外部サービスからの認証結果を判定
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		fmt.Fprintln(w, err)
 		return
 	}
 
-	// ⑤ 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
+	// 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
 	authCookieValue := objx.New(map[string]interface{}{
-		"name":       user.Name,
+		"name":       user.UserID,
 		"avatar_url": user.AvatarURL,
 	}).MustBase64()
 	http.SetCookie(w, &http.Cookie{
