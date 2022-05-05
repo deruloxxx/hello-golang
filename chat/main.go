@@ -47,7 +47,9 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// mustはerrorが起きた時にnon-nilを返す。ParseFilesでテンプレートをパース。
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
-	data := make(map[string]interface{})
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
 
 	// アプリ用Cookieからユーザー情報を取得する
 	if authCookie, err := r.Cookie("auth"); err == nil {

@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 type room struct {
 	// forwardは他のクライアントに転送するためのメッセージを保持するチャネルです。
 	// ここで受け取ったメッセージを全て転送する。
-	forward chan []byte
+	forward chan *message
 	// 同時アクセスによる競合を防ぐためにjoin, leaveを追加。
 	// joinはチャットルームに参加しようとしているクライアントのためのチャネル
 	join chan *client
@@ -26,7 +27,7 @@ type room struct {
 // newRoomはすぐに利用できるチャットルームを生成して返します。
 func newRoom() *room {
 	return &room{
-		forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
@@ -80,11 +81,17 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Fatal("ServeHTTP:", err)
 		return
 	}
+	authCookie, err := req.Cookie("auth")
+	if err != nil {
+		log.Fatal("クッキーの取得に失敗しました:", err)
+		return
+	}
 	// Websocketのコネクションを取得したらclientを生成してjoinチャネルに渡す
 	client := &client{
-		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   r,
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 	r.join <- client
 	// defer文(関数の終了処理)でクライアント終了時に退室。(クリーンアップの処理)
