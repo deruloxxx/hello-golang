@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/markbates/goth/gothic"
 	"github.com/stretchr/objx"
@@ -39,9 +42,13 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 		return
 	}
+	m := md5.New()
+	io.WriteString(m, strings.ToLower(user.Name))
+	userId := fmt.Sprintf("%x", m.Sum(nil))
 
 	// 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
 	authCookieValue := objx.New(map[string]interface{}{
+		"userId":     userId,
 		"name":       user.UserID,
 		"avatar_url": user.AvatarURL,
 		"email":      user.Email,
