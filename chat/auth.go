@@ -58,9 +58,10 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
-		Name:   "auth",
-		Value:  "",
-		Path:   "/",
+		Name:  "auth",
+		Value: "",
+		Path:  "/",
+		// MaxAge: -1でブラウザ上のクッキーを即座に削除
 		MaxAge: -1,
 	})
 
