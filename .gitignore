@@ -1,7 +1,7 @@
 /chat/chat
-/chat/sprinkle/sprinkle
-/chat/domainify/domainify
-/chat/coolify/coolify
+/sprinkle/sprinkle
+/domainify/domainify
+/coolify/coolify
 /synonyms/synonyms
 /available/available
 /socialpoll/setup.sh
