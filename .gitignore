@@ -7,4 +7,6 @@
 /socialpoll/setup.sh
 /socialpoll/counter/counter
 /socialpoll/twittervotes/twittervotes
+/sprinkle/sprinkle
+/sprinkle/read.txt
 .env
