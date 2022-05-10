@@ -15,6 +15,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("読み込み出来ませんでした: %v", err)
 	}
+	// envファイルの読み込みだとプログラムが動かない
 	apiKey := os.Getenv("BHT_API_KEY")
 	thesaurus := &thesaurus.BigHuge{APIKey: apiKey}
 	s := bufio.NewScanner(os.Stdin)
