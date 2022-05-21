@@ -63,7 +63,7 @@ func main() {
 	var addr = flag.String("addr", ":3000", "アプリケーションのアドレス")
 	// フラグを解釈します(flagの値を取得できるようにする)
 	flag.Parse()
-	r := newRoom(UseGravatar)
+	r := newRoom(UseFileSystemAvatar)
 	// ルート
 	// authHandlerのServeHttpメソッド実行→認証が成功していたら&templateHandlerのServeHttpメソッド実行
 	p := pat.New()
