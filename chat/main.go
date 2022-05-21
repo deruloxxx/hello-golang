@@ -74,7 +74,7 @@ func main() {
 	p.Get("/auth/{provider}/callback", callbackHandler)
 	p.Get("/auth/{provider}", gothic.BeginAuthHandler)
 	p.Get("/logout", logoutHandler)
-	p.Get("/uploader", uploaderHandler)
+	p.Post("/uploader", uploaderHandler)
 	http.Handle("/avatars/", http.StripPrefix("/avatars/", http.FileServer(http.Dir("./avatars"))))
 	// チャットルームを開始します
 	go r.run()

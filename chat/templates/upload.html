@@ -11,12 +11,12 @@
       </div>
       <form role="form" action="/uploader"
           enctype="multipart/form-data" method="post">
-        <input type="hidden" name="userid" value="{{.UserData.userid}}" />
+        <input type="hidden" name="userId" value="{{.UserData.userId}}" />
         <div class="form-group">
           <label for="message">ファイルを選択</label>
           <input type="file" name="avatarFile" />
         </div>
-        <input type="submit" value="アップロード" class="btn " />
+        <input type="submit" value="アップロード" class="btn" />
       </form>
     </div>
   </body>
