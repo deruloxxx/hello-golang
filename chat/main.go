@@ -70,12 +70,12 @@ func main() {
 	p.Add("GET", "/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	p.Add("GET", "/login", &templateHandler{filename: "login.html"})
 	p.Add("GET", "/upload", &templateHandler{filename: "upload.html"})
+	p.Add("GET", "/avatars/", http.StripPrefix("/avatars/", http.FileServer(http.Dir("./avatars"))))
 	p.Add("GET", "/room", r)
 	p.Get("/auth/{provider}/callback", callbackHandler)
 	p.Get("/auth/{provider}", gothic.BeginAuthHandler)
 	p.Get("/logout", logoutHandler)
 	p.Post("/uploader", uploaderHandler)
-	http.Handle("/avatars/", http.StripPrefix("/avatars/", http.FileServer(http.Dir("./avatars"))))
 	// チャットルームを開始します
 	go r.run()
 	// Webサーバーを開始します
