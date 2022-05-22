@@ -16,7 +16,6 @@ import (
 
 	"github.com/garyburd/go-oauth/oauth"
 	"github.com/joho/godotenv"
-	"github.com/nsqio/go-nsq"
 )
 
 type tweet struct {
@@ -170,19 +169,4 @@ func startTwitterStream(stopchan <-chan struct{},
 	}()
 	// goチャンネルの終了を伝える
 	return stoppedchan
-}
-
-func publishVotes(votes <-chan string) <-chan struct{} {
-	stopchan := make(chan struct{}, 1)
-	pub, _ := nsq.NewProducer("localhost:4150", nsq.NewConfig())
-	go func() {
-		for vote := range votes {
-			pub.Publish("votes", []byte(vote)) // 投票内容をパブリッシュします
-		}
-		log.Println("Publihser: 停止中です")
-		pub.Stop()
-		log.Println("Publihser: 停止しました")
-		stopchan <- struct{}{}
-	}()
-	return stopchan
 }
