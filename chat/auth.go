@@ -13,7 +13,7 @@ import (
 
 type ChatUser interface {
 	UniqueID() string
-	AuthAvatar() string
+	AvatarURL() string
 }
 
 type GothUser struct {
