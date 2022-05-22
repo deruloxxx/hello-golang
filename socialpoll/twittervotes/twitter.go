@@ -8,13 +8,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/garyburd/go-oauth/oauth"
-	"github.com/joeshaw/envdecode"
 	"github.com/joho/godotenv"
 	"github.com/nsqio/go-nsq"
 )
@@ -63,24 +63,20 @@ func setupTwitterAuth() {
 	if err != nil {
 		fmt.Printf("読み込み出来ませんでした: %v", err)
 	}
-	var ts struct {
-		Consumerkey    string `env:"SP_TWITTER_KEY,required"`
-		ConsumerSecret string `env:"SP_TWITTER_SECRET,required"`
-		AccessToken    string `env:"SP_TWITTER_AccessToken,required"`
-		AccessSecret   string `env:"SP_TWITTER_AccessSecret,required"`
-	}
-	// 環境変数のrequiredを取得できなかったらerrorを出す
-	if err := envdecode.Decode(&ts); err != nil {
-		log.Fatalln(err)
-	}
+
+	Consumerkey := os.Getenv("SP_TWITTER_KEY")
+	ConsumerSecret := os.Getenv("SP_TWITTER_SECRET")
+	AccessToken := os.Getenv("SP_TWITTER_AccessToken")
+	AccessSecret := os.Getenv("SP_TWITTER_AccessToken")
+
 	creds = &oauth.Credentials{
-		Token:  ts.AccessToken,
-		Secret: ts.AccessSecret,
+		Token:  AccessToken,
+		Secret: AccessSecret,
 	}
 	authClient = &oauth.Client{
 		Credentials: oauth.Credentials{
-			Token:  ts.Consumerkey,
-			Secret: ts.ConsumerSecret,
+			Token:  Consumerkey,
+			Secret: ConsumerSecret,
 		},
 	}
 }
