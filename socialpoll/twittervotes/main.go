@@ -28,6 +28,8 @@ type poll struct {
 func loadOptions() ([]string, error) {
 	var options []string
 	// ballotsデータベースに含まれるコレクションpollsを取り出す。nilはフィルタリングを行わないという意味
+	// Find(nil)はフィルタリングを行わないということ
+	// 流れるようなインターフェースに基づく(メソッド呼び出しの連鎖)
 	iter := db.DB("ballots").C("polls").Find(nil).Iter()
 	var p poll
 	for iter.Next(&p) {

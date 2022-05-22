@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +17,10 @@ import (
 	"github.com/joeshaw/envdecode"
 	"github.com/joho/godotenv"
 )
+
+type tweet struct {
+	Text string
+}
 
 var conn net.Conn
 
@@ -97,4 +103,47 @@ func makeRequest(req *http.Request, params url.Values) (*http.Response, error) {
 	req.Header.Set("Content-Length", strconv.Itoa(len(formEnc)))
 	req.Header.Set("Authorization", authClient.AuthorizationHeader(creds, "POST", req.URL, params))
 	return httpClient.Do(req)
+}
+
+// Twitter上で投票が行われたことを通知
+func readFromTwitter(votes chan<- string) {
+	// loadOptions関数で全ての投票での選択肢を取得
+	options, err := loadOptions()
+	if err != nil {
+		log.Println("選択肢の読み込みに失敗しました:", err)
+		return
+	}
+	// Twitter側のエンドポイントを指定
+	u, err := url.Parse("https://stream.twitter.com/1.1/statuses/filter.json")
+	if err != nil {
+		log.Println("URLの解析に失敗しました:", err)
+		return
+	}
+	query := make(url.Values)
+	// 選択肢のリクエストをカンマ区切りで指定
+	query.Set("track", strings.Join(options, ","))
+	req, err := http.NewRequest("POST", u.String(), strings.NewReader(query.Encode()))
+	if err != nil {
+		log.Println("検索リクエストの作成に失敗しました:", err)
+		return
+	}
+	resp, err := makeRequest(req, query)
+	if err != nil {
+		log.Println("検索のリクエストに失敗しました:", err)
+		return
+	}
+	reader = resp.Body
+	decoder := json.NewDecoder(reader)
+	for {
+		var tweet tweet
+		if err := decoder.Decode(&tweet); err != nil {
+			break
+		}
+		for _, option := range options {
+			if strings.Contains(strings.ToLower(tweet.Text), strings.ToLower(option)) {
+				log.Println("投票:", option)
+				votes <- option
+			}
+		}
+	}
 }
