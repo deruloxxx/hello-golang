@@ -24,6 +24,7 @@ type poll struct {
 	Options []string
 }
 
+// Twitter検索に使われる選択肢を取り出す
 func loadOptions() ([]string, error) {
 	var options []string
 	// ballotsデータベースに含まれるコレクションpollsを取り出す。nilはフィルタリングを行わないという意味
