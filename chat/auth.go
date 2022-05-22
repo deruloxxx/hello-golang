@@ -11,9 +11,27 @@ import (
 	"github.com/stretchr/objx"
 )
 
+type ChatUser interface {
+	UniqueID() string
+	AuthAvatar() string
+}
+
+type GothUser struct {
+	AvatarURL string
+}
+
+type chatUser struct {
+	GothUser
+	uniqueID string
+}
+
 type authHandler struct {
 	// ラップ対象のハンドラを保持
 	next http.Handler
+}
+
+func (u chatUser) UniqueID() string {
+	return u.uniqueID
 }
 
 func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -42,16 +60,17 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 		return
 	}
+	chatUser := &chatUser{User: user}
 	m := md5.New()
 	io.WriteString(m, strings.ToLower(user.Name))
-	userId := fmt.Sprintf("%x", m.Sum(nil))
+	chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
+	avatarURL, err := avatars.GetAvatarURL(chatUser)
 
 	// 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
 	authCookieValue := objx.New(map[string]interface{}{
-		"userId":     userId,
+		"userId":     chatUser.uniqueID,
 		"name":       user.UserID,
-		"avatar_url": user.AvatarURL,
-		"email":      user.Email,
+		"avatar_url": avatarURL,
 	}).MustBase64()
 	http.SetCookie(w, &http.Cookie{
 		Name:  "auth",

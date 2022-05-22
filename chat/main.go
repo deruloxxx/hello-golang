@@ -22,6 +22,12 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
+// 現在アクティブなAvatarの実装
+var avatars Avatar = TryAvatars{
+	UseFileSystemAvatar,
+	UseAuthAvatar,
+	UseGravatar}
+
 // templは1つのテンプレートを表します
 type templateHandler struct {
 	once     sync.Once
@@ -63,7 +69,7 @@ func main() {
 	var addr = flag.String("addr", ":3000", "アプリケーションのアドレス")
 	// フラグを解釈します(flagの値を取得できるようにする)
 	flag.Parse()
-	r := newRoom(UseFileSystemAvatar)
+	r := newRoom()
 	// ルート
 	// authHandlerのServeHttpメソッド実行→認証が成功していたら&templateHandlerのServeHttpメソッド実行
 	p := pat.New()
