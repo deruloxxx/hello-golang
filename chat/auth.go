@@ -1,14 +1,10 @@
 package main
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
-
 	"github.com/markbates/goth/gothic"
 	"github.com/stretchr/objx"
+	"net/http"
 )
 
 type ChatUser interface {
@@ -16,13 +12,14 @@ type ChatUser interface {
 	AvatarURL() string
 }
 
-type User struct {
-	AvatarURL string
+type chatUser struct {
+	httpWriter  http.ResponseWriter
+	httpRequest *http.Request
 }
 
-type chatUser struct {
-	User
-	uniqueID string
+func (u chatUser) AvatarURL() string {
+	//TODO implement me like UniqueID()
+	panic("implement me")
 }
 
 type authHandler struct {
@@ -31,7 +28,13 @@ type authHandler struct {
 }
 
 func (u chatUser) UniqueID() string {
-	return u.uniqueID
+	// 外部サービスからの認証結果を判定
+	user, err := gothic.CompleteUserAuth(u.httpWriter, u.httpRequest)
+	if err != nil {
+		fmt.Fprintln(u.httpWriter, err)
+		return ""
+	}
+	return user.UserID
 }
 
 func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -54,23 +57,14 @@ func MustAuth(handler http.Handler) http.Handler {
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
-	// 外部サービスからの認証結果を判定
-	user, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-	chatUser := &chatUser{User: User{AvatarURL: user.AvatarURL}}
-	m := md5.New()
-	io.WriteString(m, strings.ToLower(user.Name))
-	chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
-	avatarURL, err := avatars.GetAvatarURL(chatUser)
+	chatUser := &chatUser{httpWriter: w, httpRequest: r}
+	// TODO どこでやる?: chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
 
 	// 外部サービスから取得した情報をアプリ用データとしてCookieにしこむ
 	authCookieValue := objx.New(map[string]interface{}{
-		"userId":     chatUser.uniqueID,
-		"name":       user.UserID,
-		"avatar_url": avatarURL,
+		"userId":     chatUser.UniqueID(),
+		"name":       chatUser.UniqueID(),
+		"avatar_url": chatUser.AvatarURL(),
 	}).MustBase64()
 	http.SetCookie(w, &http.Cookie{
 		Name:  "auth",
