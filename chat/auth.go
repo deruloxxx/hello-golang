@@ -16,12 +16,12 @@ type ChatUser interface {
 	AvatarURL() string
 }
 
-type GothUser struct {
+type User struct {
 	AvatarURL string
 }
 
 type chatUser struct {
-	GothUser
+	User
 	uniqueID string
 }
 
@@ -60,7 +60,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 		return
 	}
-	chatUser := &chatUser{User: user}
+	chatUser := &chatUser{User: User{AvatarURL: user.AvatarURL}}
 	m := md5.New()
 	io.WriteString(m, strings.ToLower(user.Name))
 	chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
