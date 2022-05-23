@@ -29,32 +29,30 @@ func TestAuthAvatar(t *testing.T) {
 
 func TestGravatarAvatar(t *testing.T) {
 	var gravatarAvatar GravatarAvatar
-	client := new(client)
-	client.userData = map[string]interface{}{"userId": "abc"}
-	url, err := gravatarAvatar.GetAvatarURL(client)
+	user := &chatUser{uniqueID: "abc"}
+	url, err := gravatarAvatar.GetAvatarURL(user)
 	if err != nil {
-		t.Error("GravatarAvatar.GetAvatarURLはエラーを返すべきではありません")
+		t.Error("GravatarAvitar.GetAvatarURLはエラーを返すべきではありません")
 	}
 	if url != "//www.gravatar.com/avatar/abc" {
 		t.Errorf("GravatarAvitar.GetAvatarURLが%sという誤った値を返しました", url)
 	}
 }
 
-func TestFyleSystemAvatar(t *testing.T) {
-	// テスト用のアバターのファイルを生成
+func TestFileSystemAvatar(t *testing.T) {
+
+	// テスト用のアバターのファイルを生成します
 	filename := filepath.Join("avatars", "abc.jpg")
 	ioutil.WriteFile(filename, []byte{}, 0777)
-	// テストコードが異常終了しても必ず実行される
 	defer func() { os.Remove(filename) }()
 
 	var fileSystemAvatar FileSystemAvatar
-	client := new(client)
-	client.userData = map[string]interface{}{"userId": "abc"}
-	url, err := fileSystemAvatar.GetAvatarURL(client)
+	user := &chatUser{uniqueID: "abc"}
+	url, err := fileSystemAvatar.GetAvatarURL(user)
 	if err != nil {
 		t.Error("FileSystemAvatar.GetAvatarURLはエラーを返すべきではありません")
 	}
 	if url != "/avatars/abc.jpg" {
-		t.Errorf("FileSystemAvatar.GetAvatarURLが%sといった誤った値を返しました", url)
+		t.Errorf("FileSystemAvatar.GetAvatarURLが%sという誤った値を返しました", url)
 	}
 }
