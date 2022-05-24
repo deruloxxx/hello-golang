@@ -2,16 +2,25 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"hello-golang/meander"
 	"net/http"
+	"os"
 	"runtime"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Printf("読み込み出来ませんでした: %v", err)
+	}
 	// プログラムから使用できるCPU数の最大値を指定
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// meander.APIKeyをセット
+	meander.APIKey = os.Getenv("GOOGLE_PLACES_API_KEY")
 	http.HandleFunc("/journeys", func(w http.ResponseWriter, r *http.Request) {
 		// meander.Journeysをエンコード化してwに書き出し
 		respond(w, r, meander.Journeys)

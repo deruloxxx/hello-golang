@@ -9,6 +9,8 @@ type Place struct {
 	Vicinity        string         `json:"vicinity"`
 }
 
+var APIKey string
+
 type googleResponse struct {
 	Results []*Place `json:"results"`
 }
