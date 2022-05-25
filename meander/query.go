@@ -3,8 +3,11 @@ package meander
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"sync"
+	"time"
 )
 
 // Google Places APIからのレスポンスを使いやすいオブジェクトに変換するための定義
@@ -79,4 +82,45 @@ func (q *Query) find(types string) (*googleResponse, error) {
 		return nil, err
 	}
 	return &responce, nil
+}
+
+// 問い合わせを一斉に行い、その結果を返します
+func (q *Query) Run() []interface{} {
+	// ナノ秒単位で時間を取得
+	rand.Seed(time.Now().UnixNano())
+	var w sync.WaitGroup
+	var l sync.Mutex
+	places := make([]interface{}, len(q.Journey))
+	// Query.Findメソッドを並行に呼び出す。早くリクエストを送信するため。
+	for i, r := range q.Journey {
+		w.Add(1)
+		go func(types string, i int) {
+			// WaitGroupオブジェクトに対してリクエストの完了を伝える
+			defer w.Done()
+			// リクエストを実行
+			response, err := q.find(types)
+			if err != nil {
+				fmt.Errorf("施設の検索に失敗しました:", err)
+				return
+			}
+			if len(response.Results) == 0 {
+				fmt.Errorf("施設が見つかりませんでした", types)
+				return
+			}
+			for _, result := range response.Results {
+				for _, photo := range result.Photos {
+					// クライアントにAPIを意識させないため写真のURLをこちらで用意
+					photo.URL = "https://maps.googleapis.com/maps/api/place/photo?" +
+						"maxwidth=1000&photoreference=" + photo.PhotoRef +
+						"&key=" + APIKey
+				}
+			}
+			randI := rand.Intn(len(response.Results))
+			l.Lock()
+			places[i] = response.Results[randI]
+			l.Unlock()
+		}(r, i)
+	}
+	w.Wait() // 全てのリクエストの完了を待ちます
+	return places
 }
