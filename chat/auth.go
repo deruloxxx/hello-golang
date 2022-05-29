@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/markbates/goth/gothic"
 	"github.com/stretchr/objx"
-	"net/http"
 )
 
 type ChatUser interface {
@@ -57,6 +58,14 @@ func MustAuth(handler http.Handler) http.Handler {
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	_, err := w.Write([]byte(`<p>認証が完了しました</p>`))
+	if err != nil {
+		panic(err)
+	}
+
+	return
 	chatUser := &chatUser{httpWriter: w, httpRequest: r}
 	// TODO どこでやる?: chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
 
